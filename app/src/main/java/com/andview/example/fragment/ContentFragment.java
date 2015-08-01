@@ -8,6 +8,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -50,9 +51,15 @@ public class ContentFragment extends BaseFragment{
         BaseActivity activity = (BaseActivity)getActivity();
 
         mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
-        mToolbar.setTitle("Title");
+        mToolbar.setTitle("XMenu");
         activity.setSupportActionBar(mToolbar);
         activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        mToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                return false;
+            }
+        });
 
         mViewPager=(ViewPager)view.findViewById(R.id.viewpager1);
         tabStrip=(IntegrateFolderTitleStrip)view.findViewById(R.id.folder_pager_strip);

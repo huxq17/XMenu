@@ -1,6 +1,7 @@
 package com.andview.example.activity;
 
 import android.os.Bundle;
+import android.view.MenuItem;
 
 import com.andview.example.base.BaseActivity;
 import com.andview.example.base.Constants;
@@ -41,5 +42,17 @@ public class MainActivity extends BaseActivity implements MenuFragment.OnFragmen
     }
     public void onFragmentInteraction(String id){
 
+    }
+    public void toggle() {
+        xMenu.toggle();
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case android.R.id.home:
+                toggle();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
