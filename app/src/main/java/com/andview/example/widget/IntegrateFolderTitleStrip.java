@@ -12,6 +12,8 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.andview.example.utils.DisplayUtil;
+
 import java.util.ArrayList;
 
 public class IntegrateFolderTitleStrip extends View implements
@@ -61,7 +63,7 @@ public class IntegrateFolderTitleStrip extends View implements
         // context.getResources().getDisplayMetrics())));
         // setTextColor(localTypedArray.getColor(5, -1));
         // localTypedArray.recycle();
-        setTextSize(50);
+        setTextSize(DisplayUtil.sp2px(getContext(),18));
         setTextColor(Color.BLACK);
         initPaint();
     }

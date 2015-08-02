@@ -1,11 +1,17 @@
 package com.andview.example.widget.xmenu;
 
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
+
+import com.andview.xmenu.R;
 
 public class XMenu extends RelativeLayout {
 
@@ -13,21 +19,20 @@ public class XMenu extends RelativeLayout {
     private ContentView mContentView;
 
     public XMenu(Context context) {
-        super(context);
-        init(context);
+        this(context,null);
     }
 
     public XMenu(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(context);
+        init(context,attrs);
     }
 
     public XMenu(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init(context);
+        init(context,attrs);
     }
 
-    private void init(Context context) {
+    private void init(Context context,AttributeSet attrs) {
         LayoutParams behindParams = new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT);
         mMenuView = new MenuView(context);
@@ -37,6 +42,23 @@ public class XMenu extends RelativeLayout {
                 LayoutParams.MATCH_PARENT);
         mContentView = new ContentView(context);
         addView(mContentView, aboveParams);
+
+        TypedArray a = context.obtainStyledAttributes(attrs,
+                R.styleable.XMenu);
+        try {
+            Drawable leftShadowDrawable = a
+                    .getDrawable(R.styleable.XMenu_LeftShadowDrawable);
+            if (null == leftShadowDrawable) {
+                leftShadowDrawable = new GradientDrawable(
+                        GradientDrawable.Orientation.LEFT_RIGHT, new int[] { Color.TRANSPARENT,
+                        Color.argb(99, 0, 0, 0) });
+            }
+            mContentView.setLeftShadowDrawable(leftShadowDrawable);
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            a.recycle();
+        }
     }
 
     public void setMenu(int layoutId) {
@@ -77,5 +99,8 @@ public class XMenu extends RelativeLayout {
     public void setMenuWidth(int menuWidth) {
         mContentView.setMenuWidth(menuWidth);
         mMenuView.setMenuWidth(menuWidth);
+    }
+    public void setLeftShadowWidth(int width){
+        mContentView.setLeftShadowWidth(width);
     }
 }

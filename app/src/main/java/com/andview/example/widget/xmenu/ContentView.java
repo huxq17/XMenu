@@ -2,9 +2,7 @@ package com.andview.example.widget.xmenu;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RectShape;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -44,9 +42,8 @@ public class ContentView extends ViewGroup {
     private float mLastMotionX;
     private float mLastMotionY;
 
-    private int mShadowWidth = 30;
-    private ShapeDrawable mShadowDrawable;
-    private RectShape mRect;
+    private int mShadowWidth = 15;
+    private Drawable mShadowDrawable;
 
     public ContentView(Context context) {
         super(context);
@@ -77,8 +74,6 @@ public class ContentView extends ViewGroup {
     }
 
     private void init() {
-        mShadowDrawable = new ShapeDrawable();
-        mRect = new RectShape();
         setWillNotDraw(false);
 
         mContainer = new FrameLayout(getContext());
@@ -98,6 +93,12 @@ public class ContentView extends ViewGroup {
         mContainer.addView(v);
     }
 
+    public void setLeftShadowDrawable(Drawable drawable) {
+        mShadowDrawable = drawable;
+    }
+    public void setLeftShadowWidth(int width){
+        mShadowWidth = width;
+    }
     @Override
     public void scrollTo(int x, int y) {
         super.scrollTo(x, y);
@@ -124,13 +125,10 @@ public class ContentView extends ViewGroup {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        mShadowDrawable.setShape(mRect);
-        int left = -getScrollX() - mShadowWidth;
-        int right = left + mShadowWidth;
-        Log.i("getScrollX", "left=" + left+";right="+right);
-        mShadowDrawable.setBounds(left, 0, right, getHeight());
-        mShadowDrawable.getPaint().setColor(Color.GREEN);
-        mShadowDrawable.draw(canvas);
+        if (null != mShadowDrawable) {
+            mShadowDrawable.setBounds(-mShadowWidth, 0, 0, getHeight());
+            mShadowDrawable.draw(canvas);
+        }
     }
 
     //
