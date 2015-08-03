@@ -11,28 +11,46 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
 
+import com.andview.example.utils.DisplayUtil;
 import com.andview.xmenu.R;
 
 public class XMenu extends RelativeLayout {
 
+    /**
+     * Constant value for use with setTouchModeAbove(). Allows the SlidingMenu to be opened with a swipe
+     * gesture on the screen's margin
+     */
+    public static final int TOUCHMODE_MARGIN = 0;
+
+    /**
+     * Constant value for use with setTouchModeAbove(). Allows the SlidingMenu to be opened with a swipe
+     * gesture anywhere on the screen
+     */
+    public static final int TOUCHMODE_FULLSCREEN = 1;
+
+    /**
+     * Constant value for use with setTouchModeAbove(). Denies the SlidingMenu to be opened with a swipe
+     * gesture
+     */
+    public static final int TOUCHMODE_NONE = 2;
     private MenuView mMenuView;
     private ContentView mContentView;
 
     public XMenu(Context context) {
-        this(context,null);
+        this(context, null);
     }
 
     public XMenu(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(context,attrs);
+        init(context, attrs);
     }
 
     public XMenu(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init(context,attrs);
+        init(context, attrs);
     }
 
-    private void init(Context context,AttributeSet attrs) {
+    private void init(Context context, AttributeSet attrs) {
         LayoutParams behindParams = new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT);
         mMenuView = new MenuView(context);
@@ -50,13 +68,17 @@ public class XMenu extends RelativeLayout {
                     .getDrawable(R.styleable.XMenu_LeftShadowDrawable);
             if (null == leftShadowDrawable) {
                 leftShadowDrawable = new GradientDrawable(
-                        GradientDrawable.Orientation.LEFT_RIGHT, new int[] { Color.TRANSPARENT,
-                        Color.argb(99, 0, 0, 0) });
+                        GradientDrawable.Orientation.LEFT_RIGHT, new int[]{Color.TRANSPARENT,
+                        Color.argb(99, 0, 0, 0)});
             }
             mContentView.setLeftShadowDrawable(leftShadowDrawable);
-        }catch (Exception e){
+            int touchModeAbove = a.getInt(R.styleable.XMenu_touchModeAbove, TOUCHMODE_MARGIN);
+            setTouchModeAbove(touchModeAbove);
+            int edgeWidth = a.getInt(R.styleable.XMenu_edgeWidth, DisplayUtil.dip2px(getContext(),10));
+            mContentView.setEdgeWith(edgeWidth);
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             a.recycle();
         }
     }
@@ -100,7 +122,24 @@ public class XMenu extends RelativeLayout {
         mContentView.setMenuWidth(menuWidth);
         mMenuView.setMenuWidth(menuWidth);
     }
-    public void setLeftShadowWidth(int width){
+
+    public void setLeftShadowWidth(int width) {
         mContentView.setLeftShadowWidth(width);
+    }
+
+    /**
+     * Controls whether the SlidingMenu can be opened with a swipe gesture.
+     * Options are {@link #TOUCHMODE_MARGIN TOUCHMODE_MARGIN}, {@link #TOUCHMODE_FULLSCREEN TOUCHMODE_FULLSCREEN},
+     * or {@link #TOUCHMODE_NONE TOUCHMODE_NONE}
+     *
+     * @param i the new touch mode
+     */
+    public void setTouchModeAbove(int i) {
+        if (i != XMenu.TOUCHMODE_FULLSCREEN && i != XMenu.TOUCHMODE_MARGIN
+                && i != XMenu.TOUCHMODE_NONE) {
+            throw new IllegalStateException("TouchMode must be set to either" +
+                    "TOUCHMODE_FULLSCREEN or TOUCHMODE_MARGIN or TOUCHMODE_NONE.");
+        }
+        mContentView.setTouchMode(i);
     }
 }

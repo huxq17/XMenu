@@ -2,6 +2,7 @@ package com.andview.example.widget.xmenu;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -12,6 +13,11 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.Scroller;
+
+import com.andview.example.utils.LogUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ContentView extends ViewGroup {
 
@@ -44,6 +50,9 @@ public class ContentView extends ViewGroup {
 
     private int mShadowWidth = 15;
     private Drawable mShadowDrawable;
+
+    private int mTouchMode = XMenu.TOUCHMODE_MARGIN;
+    private List<View> mIgnoredViews = new ArrayList<View>();
 
     public ContentView(Context context) {
         super(context);
@@ -96,9 +105,11 @@ public class ContentView extends ViewGroup {
     public void setLeftShadowDrawable(Drawable drawable) {
         mShadowDrawable = drawable;
     }
-    public void setLeftShadowWidth(int width){
+
+    public void setLeftShadowWidth(int width) {
         mShadowWidth = width;
     }
+
     @Override
     public void scrollTo(int x, int y) {
         super.scrollTo(x, y);
@@ -131,69 +142,8 @@ public class ContentView extends ViewGroup {
         }
     }
 
-    //
-    // @Override
-    // public boolean onInterceptTouchEvent(MotionEvent ev) {
-    //
-    // final int action = ev.getAction();
-    // if ((action == MotionEvent.ACTION_MOVE)
-    // && (mTouchState != TOUCH_STATE_REST)) {
-    // Log.e("ad", "return true");
-    // return true;
-    // }
-    //
-    // final float x = ev.getX();
-    // final float y = ev.getY();
-    //
-    // switch (action) {
-    // case MotionEvent.ACTION_DOWN:
-    // // Remember location of down touch
-    // mLastMotionX = x;
-    // mLastMotionY = y;
-    //
-    // mTouchState = mScroller.isFinished() ? TOUCH_STATE_REST
-    // : TOUCH_STATE_SCROLLING;
-    // Log.e("ad", "onInterceptTouchEvent  ACTION_DOWN  mTouchState=="
-    // + (mTouchState == TOUCH_STATE_SCROLLING));
-    //
-    // break;
-    // case MotionEvent.ACTION_MOVE:
-    // final int xDiff = (int) Math.abs(x - mLastMotionX);
-    // final int yDiff = (int) Math.abs(y - mLastMotionY);
-    //
-    // final int touchSlop = mTouchSlop;
-    // boolean xMoved = xDiff > touchSlop;
-    // boolean yMoved = yDiff > touchSlop;
-    //
-    // if (xMoved || yMoved) {
-    // if (xMoved) {
-    // // Scroll if the user moved far enough along the X axis
-    // mTouchState = TOUCH_STATE_SCROLLING;
-    // Log.e("ad",
-    // "onInterceptTouchEvent  ACTION_MOVE  mTouchState=="
-    // + (mTouchState == TOUCH_STATE_SCROLLING));
-    // enableChildrenCache();
-    // }
-    // }
-    // break;
-    //
-    // case MotionEvent.ACTION_CANCEL:
-    // case MotionEvent.ACTION_UP:
-    // // Release the drag
-    // clearChildrenCache();
-    // mTouchState = TOUCH_STATE_REST;
-    // Log.e("ad", "onInterceptTouchEvent  ACTION_UP  mTouchState=="
-    // + (mTouchState == TOUCH_STATE_SCROLLING));
-    // break;
-    // }
-    //
-    // /*
-    // * The only time we want to intercept motion events is if we are in the
-    // * drag mode.
-    // */
-    // return mTouchState != TOUCH_STATE_REST;
-    // }
-    MotionEvent mLastMoveEvent;
+    private MotionEvent mLastMoveEvent;
+    private boolean isCloseMenu = false;
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
@@ -203,21 +153,88 @@ public class ContentView extends ViewGroup {
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 mLastMotionX = x;
-            case MotionEvent.ACTION_MOVE:
-
+                if (isMenuShowing() && mLastMotionX >= menuWidth) {
+                    isCloseMenu = true;
+                }
+                if(thisTouchAllowed(ev)){
+                    mIntercept = true;
+                }
+                break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                //
-                if (isMenuShowing() && mLastMotionX >= menuWidth) {
+                if (isCloseMenu) {
                     showContent();
-                    return true;
+                    isCloseMenu = false;
                 }
+                mIntercept = false;
                 break;
 
             default:
                 break;
         }
         return super.dispatchTouchEvent(ev);
+    }
+private boolean mIntercept = false;
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        if(!mIntercept){
+            return false;
+        }
+
+        final int action = ev.getAction();
+        if ((action == MotionEvent.ACTION_MOVE)
+                && (mTouchState != TOUCH_STATE_REST)) {
+            Log.e("ad", "return true");
+            return true;
+        }
+
+        final float x = ev.getX();
+        final float y = ev.getY();
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                // Remember location of down touch
+                mLastMotionX = x;
+                mLastMotionY = y;
+                mTouchState = mScroller.isFinished() ? TOUCH_STATE_REST
+                        : TOUCH_STATE_SCROLLING;
+                Log.e("ad", "onInterceptTouchEvent  ACTION_DOWN  mTouchState=="
+                        + (mTouchState == TOUCH_STATE_SCROLLING));
+
+                break;
+            case MotionEvent.ACTION_MOVE:
+                final int xDiff = (int) Math.abs(x - mLastMotionX);
+                final int yDiff = (int) Math.abs(y - mLastMotionY);
+
+                final int touchSlop = mTouchSlop;
+                boolean xMoved = xDiff > touchSlop;
+                boolean yMoved = yDiff > touchSlop;
+
+                if (xMoved || yMoved) {
+                    if (xMoved) {
+                        // Scroll if the user moved far enough along the X axis
+                        mTouchState = TOUCH_STATE_SCROLLING;
+                        Log.e("ad",
+                                "onInterceptTouchEvent  ACTION_MOVE  mTouchState=="
+                                        + (mTouchState == TOUCH_STATE_SCROLLING));
+                        enableChildrenCache();
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
+                // Release the drag
+                clearChildrenCache();
+                mTouchState = TOUCH_STATE_REST;
+                Log.e("ad", "onInterceptTouchEvent  ACTION_UP  mTouchState=="
+                        + (mTouchState == TOUCH_STATE_SCROLLING));
+                break;
+        }
+
+     /*
+     * The only time we want to intercept motion events is if we are in the
+     * drag mode.
+     */
+        return mTouchState != TOUCH_STATE_REST;
     }
 
     @Override
@@ -242,31 +259,31 @@ public class ContentView extends ViewGroup {
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
-                // final int xDiff = (int) Math.abs(x - mLastMotionX);
-                // final int yDiff = (int) Math.abs(y - mLastMotionY);
-                // final int touchSlop = mTouchSlop;
-                // boolean xMoved = xDiff > touchSlop;
-                // if (xMoved) {
-                // mTouchState = TOUCH_STATE_SCROLLING;
-                // Log.e("ad", "onInterceptTouchEvent  ACTION_MOVE  mTouchState=="
-                // + (mTouchState == TOUCH_STATE_SCROLLING));
-                // enableChildrenCache();
-                // }
-                // if (mTouchState == TOUCH_STATE_SCROLLING) {
-                // final float deltaX = mLastMotionX - x;
-                // mLastMotionX = x;
-                // float oldScrollX = getScrollX();
-                // float scrollX = oldScrollX + deltaX;
-                // final float leftBound = 0;
-                // final float rightBound = -MENU_WIDTH;
-                // if (scrollX > leftBound) {
-                // scrollX = leftBound;
-                // } else if (scrollX < rightBound) {
-                // scrollX = rightBound;
-                // }
-                // scrollTo((int) scrollX, getScrollY());
-                //
-                // }
+                final int xDiff = (int) Math.abs(x - mLastMotionX);
+                final int yDiff = (int) Math.abs(y - mLastMotionY);
+                final int touchSlop = mTouchSlop;
+                boolean xMoved = xDiff > touchSlop;
+                if (xMoved) {
+                    mTouchState = TOUCH_STATE_SCROLLING;
+                    LogUtils.i("onInterceptTouchEvent ACTION_MOVE  mTouchState=="
+                            + (mTouchState == TOUCH_STATE_SCROLLING));
+                    enableChildrenCache();
+                }
+                if (mTouchState == TOUCH_STATE_SCROLLING) {
+                    final float deltaX = mLastMotionX - x;
+                    mLastMotionX = x;
+                    oldScrollX = getScrollX();
+                    float scrollX = oldScrollX + deltaX;
+                    final float leftBound = 0;
+                    final float rightBound = -menuWidth;
+                    if (scrollX > leftBound) {
+                        scrollX = leftBound;
+                    } else if (scrollX < rightBound) {
+                        scrollX = rightBound;
+                    }
+                    scrollTo((int) scrollX, getScrollY());
+
+                }
                 break;
             case MotionEvent.ACTION_UP:
                 if (mTouchState == TOUCH_STATE_SCROLLING) {
@@ -274,7 +291,7 @@ public class ContentView extends ViewGroup {
                     velocityTracker.computeCurrentVelocity(SNAP_VELOCITY);
                     int velocityX = (int) velocityTracker.getXVelocity();
                     oldScrollX = getScrollX();
-                    Log.e("ad", "oldScrollX  ==  " + oldScrollX);
+                    LogUtils.i("oldScrollX == " + oldScrollX + ";menuWidth=" + menuWidth);
                     int dx = 0;
                     if (oldScrollX < -menuWidth / 2) {
                         dx = -menuWidth - oldScrollX;
@@ -326,6 +343,29 @@ public class ContentView extends ViewGroup {
         this.menuWidth = menuWidth;
     }
 
+    public void addIgnoredView(View v) {
+        if (!mIgnoredViews.contains(v)) {
+            mIgnoredViews.add(v);
+        }
+    }
+
+    public void removeIgnoredView(View v) {
+        mIgnoredViews.remove(v);
+    }
+
+    public void clearIgnoredViews() {
+        mIgnoredViews.clear();
+    }
+
+    private boolean isInIgnoredView(MotionEvent ev) {
+        Rect rect = new Rect();
+        for (View v : mIgnoredViews) {
+            v.getHitRect(rect);
+            if (rect.contains((int) ev.getX(), (int) ev.getY())) return true;
+        }
+        return false;
+    }
+
     void smoothScrollTo(int dx) {
         int duration = 500;
         int oldScrollX = getScrollX();
@@ -350,4 +390,32 @@ public class ContentView extends ViewGroup {
         }
     }
 
+    public void setTouchMode(int touchMode) {
+        mTouchMode = touchMode;
+    }
+
+    public int getTouchMode() {
+        return mTouchMode;
+    }
+
+    private boolean thisTouchAllowed(MotionEvent ev) {
+        int x = (int) (ev.getX());
+        LogUtils.i("thisTouchAllowed x="+x);
+        if(isMenuShowing()){
+           return true;
+        }
+        switch (mTouchMode) {
+            case XMenu.TOUCHMODE_FULLSCREEN:
+                return !isInIgnoredView(ev);
+            case XMenu.TOUCHMODE_NONE:
+                return false;
+            case XMenu.TOUCHMODE_MARGIN:
+                return x<=mEdgeWith;
+        }
+        return false;
+    }
+    private int mEdgeWith;
+    public void setEdgeWith(int width){
+        mEdgeWith = width;
+    }
 }

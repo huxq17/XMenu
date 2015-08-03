@@ -8,7 +8,6 @@ import android.graphics.Rect;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -77,8 +76,6 @@ public class IntegrateFolderTitleStrip extends View implements
     @Override
     public void onPageScrolled(int position, float positionOffset,
                                int positionOffsetPixels) {
-        Log.e(TAG, "onPageScrolled:" + position + "," + positionOffset + ","
-                + positionOffsetPixels);
         // positionOffset 相对于一个页面的百分比 静止状态相当于0
         update(position, positionOffset);
     }
@@ -86,7 +83,6 @@ public class IntegrateFolderTitleStrip extends View implements
     // ViewPager.OnPageChangeListener 接口 滑动超过一半 滑动完毕后（state =2）调用该方法
     @Override
     public void onPageSelected(int position) {
-        Log.e(TAG, "onPageSelected:" + position + "," + mScrollState);
         if (mScrollState != ViewPager.SCROLL_STATE_IDLE) {
             return;
         }
@@ -98,7 +94,6 @@ public class IntegrateFolderTitleStrip extends View implements
     @Override
     public void onPageScrollStateChanged(int state) {
         this.mScrollState = state;
-        Log.e("IntegrateFolderTitleStrip", "onPageScrollStateChanged:" + state);
 
     }
 
@@ -165,7 +160,6 @@ public class IntegrateFolderTitleStrip extends View implements
         mScaleArray[0] = (1.0F + (this.mScaleConstant - 1.0F) * (1.0F - offset));
         mScaleArray[1] = (1.0F + offset * (this.mScaleConstant - 1.0F));
         invalidate();
-        Log.i("update", "currentCenterX=" + mCenterX);
     }
 
     /**
@@ -185,7 +179,6 @@ public class IntegrateFolderTitleStrip extends View implements
         int left = 0;
         while (index < count) {
             CharSequence text = mPageAdapter.getPageTitle(index);
-            Log.e(TAG, "text:" + text);
             if (text.length() > MAX_LENGTH) {
                 text = text.subSequence(0, MAX_LENGTH - 1) + "...";
             }
@@ -213,8 +206,6 @@ public class IntegrateFolderTitleStrip extends View implements
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 int clickItem = getClickPosition(event.getX(), event.getY());
 
-                Log.i("onTouchEvent", "clickItem=" + clickItem
-                        + ";currentCenterX=" + mCenterX);
                 if (clickItem >= 0 && clickItem < mRectList.size()) {
                     mViewPager.setCurrentItem(clickItem, true);
                 }
@@ -232,7 +223,6 @@ public class IntegrateFolderTitleStrip extends View implements
      */
     private int getClickPosition(float downX, float downY) {
         if ((downY < 0.0F) || (downY > getHeight())) {
-            Log.i("getClickPosition", "invaild position");
             return -1;
         }
         int currentItem = mViewPager.getCurrentItem();
@@ -306,7 +296,6 @@ public class IntegrateFolderTitleStrip extends View implements
                     }
                 }
             }
-            Log.i("draw", "centerx="+mCenterX+"getwidth="+getWidth());
             float x = curRect.exactCenterX() + mCenterX + halfWidth;
             float y = mBaseLine;
             if (scale != 1.0F) {

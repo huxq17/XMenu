@@ -2,5 +2,7 @@
 <resources>
     <declare-styleable name="XMenu">
         <attr name="LeftShadowDrawable" format="reference" />
+        <attr name="touchModeAbove" format="integer" />
+        <attr name="edgeWidth" format="integer" />
     </declare-styleable>
 </resources>

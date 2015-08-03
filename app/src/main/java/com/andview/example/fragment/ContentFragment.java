@@ -24,7 +24,7 @@ import java.util.List;
  * Created by Administrator on 2015/7/31.
  */
 public class ContentFragment extends BaseFragment{
-    private List<View> mViewList;
+    private List<View> mViewList = new ArrayList<View>();
     private String[] title={"title1","title2","title3","title4","title5","title6"};
 
     private MyPagerAdapter adapter;
@@ -35,7 +35,6 @@ public class ContentFragment extends BaseFragment{
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mViewList=new ArrayList<View>();
     }
 
     @Nullable
