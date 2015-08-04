@@ -87,6 +87,8 @@ public class ContentView2 extends ViewGroup {
     }
 
     private void init() {
+        //默认情况下ViewGroup不会回调onDraw方法，但是为了绘制侧滑的阴影部分，
+        //通过设置setWillNotDraw来让viewgroup回调onDraw
         setWillNotDraw(false);
 
         mScroller = new Scroller(getContext());
