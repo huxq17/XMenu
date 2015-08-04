@@ -18,7 +18,7 @@ import com.andview.example.utils.LogUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ContentView extends ViewGroup {
+public class ContentView2 extends ViewGroup {
 
     /**
      * 菜单宽度
@@ -52,17 +52,17 @@ public class ContentView extends ViewGroup {
     private List<View> mIgnoredViews = new ArrayList<View>();
     private View mContentView;
 
-    public ContentView(Context context) {
+    public ContentView2(Context context) {
         super(context);
         init();
     }
 
-    public ContentView(Context context, AttributeSet attrs) {
+    public ContentView2(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
-    public ContentView(Context context, AttributeSet attrs, int defStyle) {
+    public ContentView2(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init();
     }
@@ -70,9 +70,9 @@ public class ContentView extends ViewGroup {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (mContentView.getVisibility() != GONE) {
-            mContentView.measure(widthMeasureSpec, heightMeasureSpec);
-        }
+            if (mContentView.getVisibility() != GONE) {
+                mContentView.measure(widthMeasureSpec, heightMeasureSpec);
+            }
     }
 
     @Override
@@ -87,9 +87,8 @@ public class ContentView extends ViewGroup {
     }
 
     private void init() {
-        //默认情况下ViewGroup不会回调onDraw方法，但是为了绘制侧滑的阴影部分，
-        //通过设置setWillNotDraw来让viewgroup回调onDraw
         setWillNotDraw(false);
+
         mScroller = new Scroller(getContext());
         mTouchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
     }

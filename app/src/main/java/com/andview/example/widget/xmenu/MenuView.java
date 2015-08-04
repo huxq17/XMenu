@@ -45,6 +45,10 @@ public class MenuView extends ViewGroup {
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
             if(child.getVisibility()!=GONE){
+                l = getPaddingLeft();
+                t = getPaddingTop();
+                r = l + child.getMeasuredWidth();
+                b = l + child.getMeasuredHeight();
                 child.layout(l,t,r,b);
             }
         }
