@@ -6,8 +6,8 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
 
@@ -81,6 +81,8 @@ public class XMenu extends RelativeLayout {
         } finally {
             a.recycle();
         }
+        int mMarginThreshold = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                20, getResources().getDisplayMetrics());
     }
 
     public void setMenu(int layoutId) {
@@ -89,12 +91,6 @@ public class XMenu extends RelativeLayout {
 
     public void setMenu(View v) {
         mMenuView.setView(v);
-        mMenuView.invalidate();
-    }
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        return super.dispatchTouchEvent(ev);
     }
 
     public void setContent(int layoutId) {
@@ -103,7 +99,6 @@ public class XMenu extends RelativeLayout {
 
     public void setContent(View v) {
         mContentView.setView(v);
-        mContentView.invalidate();
     }
 
     public void toggle() {

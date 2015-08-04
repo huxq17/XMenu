@@ -28,7 +28,7 @@ public class BaseActivity extends AppCompatActivity {
     private Toast toast;
 
     /**
-     * ¸ñÊ½»¯×Ö·û´®
+     * æ ¼å¼åŒ–å­—ç¬¦ä¸²
      *
      * @param format
      * @param args

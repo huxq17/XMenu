@@ -4,70 +4,60 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 
 public class MenuView extends ViewGroup {
 
-	private FrameLayout mContainer;
-	private int menuWidth = 400;
+    private int menuWidth = 400;
 
-	public MenuView(Context context) {
-		super(context);
-		init();
-	}
+    public MenuView(Context context) {
+        super(context);
+    }
 
-	public MenuView(Context context, AttributeSet attrs) {
-		super(context, attrs);
-		init();
-	}
+    public MenuView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
 
-	public MenuView(Context context, AttributeSet attrs, int defStyle) {
-		super(context, attrs, defStyle);
-		init();
-	}
+    public MenuView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
 
-	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		int width = getDefaultSize(0, widthMeasureSpec);
-		int height = getDefaultSize(0, heightMeasureSpec);
-		setMeasuredDimension(width, height);
-		final int contentHeight = getChildMeasureSpec(heightMeasureSpec, 0,
-				height);
-		final int menuWidth = getChildMeasureSpec(widthMeasureSpec, 0,
-				this.menuWidth);
-		mContainer.measure(menuWidth, contentHeight);
-	}
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int width = getDefaultSize(0, widthMeasureSpec);
+        int height = getDefaultSize(0, heightMeasureSpec);
+        setMeasuredDimension(width, height);
+        final int menuWidthSpec = getChildMeasureSpec(widthMeasureSpec, 0,
+                this.menuWidth);
+        final int menuHeightSpec = getChildMeasureSpec(heightMeasureSpec, 0,
+                height);
+        final int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if(child.getVisibility()!=GONE){
+                child.measure(menuWidthSpec, menuHeightSpec);
+            }
+        }
+    }
 
-	@Override
-	protected void onLayout(boolean changed, int l, int t, int r, int b) {
-		mContainer.layout(0, 0, mContainer.getMeasuredWidth(),
-				mContainer.getMeasuredHeight());
-	}
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        final int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if(child.getVisibility()!=GONE){
+                child.layout(l,t,r,b);
+            }
+        }
+    }
 
-	public void setMenuWidth(int menuWidth) {
-		this.menuWidth = menuWidth;
-	}
+    public void setMenuWidth(int menuWidth) {
+        this.menuWidth = menuWidth;
+    }
 
-	private void init() {
-		mContainer = new FrameLayout(getContext());
-		super.addView(mContainer);
-	}
-
-	public void setView(View v) {
-		if (mContainer.getChildCount() > 0) {
-			mContainer.removeAllViews();
-		}
-		mContainer.addView(v);
-	}
-
-	@Override
-	protected void onFinishInflate() {
-		super.onFinishInflate();
-		View child;
-		for (int i = 0; i < getChildCount(); i++) {
-			child = getChildAt(i);
-			child.setFocusable(true);
-			child.setClickable(true);
-		}
-	}
+    public void setView(View v) {
+        if (getChildCount() > 0) {
+            removeAllViews();
+        }
+        addView(v);
+    }
 }

@@ -11,7 +11,6 @@ import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.Scroller;
 
 import com.andview.example.utils.LogUtils;
@@ -33,8 +32,6 @@ public class ContentView extends ViewGroup {
     private final static int TOUCH_STATE_SCROLLING = 1;
 
     public int mTouchState = TOUCH_STATE_REST;
-
-    private FrameLayout mContainer;
 
     private Scroller mScroller;
     private VelocityTracker mVelocityTracker;
@@ -72,34 +69,44 @@ public class ContentView extends ViewGroup {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        mContainer.measure(widthMeasureSpec, heightMeasureSpec);
+        final int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if(child.getVisibility()!=GONE){
+                child.measure(widthMeasureSpec, heightMeasureSpec);
+            }
+        }
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        final int width = r - l;
-        final int height = b - t;
-        mContainer.layout(0, 0, width, height);
+//        final int width = r - l;
+//        final int height = b - t;
+        final int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if(child.getVisibility()!=GONE){
+                child.layout(l,t,r,b);
+            }
+        }
     }
 
     private void init() {
         setWillNotDraw(false);
 
-        mContainer = new FrameLayout(getContext());
         mScroller = new Scroller(getContext());
         mTouchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
-        super.addView(mContainer);
     }
 
     public void setView(View v) {
-        if (mContainer.getChildCount() > 0) {
-            mContainer.removeAllViews();
+        if (getChildCount() > 0) {
+            removeAllViews();
         }
         if (v.getParent() != null) {
             throw new RuntimeException(
                     "the view has parent,please detach this view first");
         }
-        mContainer.addView(v);
+        addView(v);
     }
 
     public void setLeftShadowDrawable(Drawable drawable) {
