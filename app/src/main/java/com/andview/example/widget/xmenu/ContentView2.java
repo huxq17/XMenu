@@ -70,9 +70,9 @@ public class ContentView2 extends ViewGroup {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-            if (mContentView.getVisibility() != GONE) {
-                mContentView.measure(widthMeasureSpec, heightMeasureSpec);
-            }
+        if (mContentView.getVisibility() != GONE) {
+            mContentView.measure(widthMeasureSpec, heightMeasureSpec);
+        }
     }
 
     @Override
@@ -87,8 +87,6 @@ public class ContentView2 extends ViewGroup {
     }
 
     private void init() {
-        //默认情况下ViewGroup不会回调onDraw方法，但是为了绘制侧滑的阴影部分，
-        //通过设置setWillNotDraw来让viewgroup回调onDraw
         setWillNotDraw(false);
 
         mScroller = new Scroller(getContext());
@@ -122,27 +120,14 @@ public class ContentView2 extends ViewGroup {
     }
 
     @Override
-    public void computeScroll() {
-        if (!mScroller.isFinished()) {
-            if (mScroller.computeScrollOffset()) {
-                int oldX = getScrollX();
-                int oldY = getScrollY();
-                int x = mScroller.getCurrX();
-                int y = mScroller.getCurrY();
-                if (oldX != x || oldY != y) {
-                    scrollTo(x, y);
-                }
-                // Keep on drawing until the animation has finished.
-                postInvalidate();
-            }
-        }
-    }
-
-    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         if (null != mShadowDrawable) {
-            mShadowDrawable.setBounds(-mShadowWidth, 0, 0, getHeight());
+            int left = -mShadowWidth - getScrollX();
+            int right = left + mShadowWidth;
+            int top = 0;
+            int bottom = top + getHeight();
+            mShadowDrawable.setBounds(left, top, right, bottom);
             mShadowDrawable.draw(canvas);
         }
     }
@@ -170,6 +155,7 @@ public class ContentView2 extends ViewGroup {
                 if (isCloseMenu) {
                     showContent();
                     isCloseMenu = false;
+                    return true;
                 }
                 mIntercept = false;
                 break;
@@ -204,7 +190,7 @@ public class ContentView2 extends ViewGroup {
                 mLastMotionY = y;
                 mTouchState = mScroller.isFinished() ? TOUCH_STATE_REST
                         : TOUCH_STATE_SCROLLING;
-                Log.e("ad", "onInterceptTouchEvent  ACTION_DOWN  mTouchState=="
+                LogUtils.e("onInterceptTouchEvent  ACTION_DOWN  mTouchState=="
                         + (mTouchState == TOUCH_STATE_SCROLLING));
 
                 break;
@@ -212,19 +198,15 @@ public class ContentView2 extends ViewGroup {
                 final int xDiff = (int) Math.abs(x - mLastMotionX);
                 final int yDiff = (int) Math.abs(y - mLastMotionY);
 
-                final int touchSlop = mTouchSlop;
-                boolean xMoved = xDiff > touchSlop;
-                boolean yMoved = yDiff > touchSlop;
+                boolean xMoved = xDiff > yDiff && xDiff > mTouchSlop;
 
-                if (xMoved || yMoved) {
-                    if (xMoved) {
-                        // Scroll if the user moved far enough along the X axis
-                        mTouchState = TOUCH_STATE_SCROLLING;
-                        Log.e("ad",
-                                "onInterceptTouchEvent  ACTION_MOVE  mTouchState=="
-                                        + (mTouchState == TOUCH_STATE_SCROLLING));
-                        enableChildrenCache();
-                    }
+                if (xMoved) {
+                    // Scroll if the user moved far enough along the X axis
+                    mTouchState = TOUCH_STATE_SCROLLING;
+                    LogUtils.e(
+                            "onInterceptTouchEvent  ACTION_MOVE  mTouchState=="
+                                    + (mTouchState == TOUCH_STATE_SCROLLING));
+                    enableChildrenCache();
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
@@ -232,7 +214,7 @@ public class ContentView2 extends ViewGroup {
                 // Release the drag
                 clearChildrenCache();
                 mTouchState = TOUCH_STATE_REST;
-                Log.e("ad", "onInterceptTouchEvent  ACTION_UP  mTouchState=="
+                LogUtils.e( "onInterceptTouchEvent  ACTION_UP  mTouchState=="
                         + (mTouchState == TOUCH_STATE_SCROLLING));
                 break;
         }
@@ -321,15 +303,6 @@ public class ContentView2 extends ViewGroup {
         return false;
     }
 
-    public void toggle() {
-        int oldScrollX = getScrollX();
-        if (oldScrollX == 0) {
-            smoothScrollTo(-menuWidth);
-        } else if (oldScrollX == -menuWidth) {
-            smoothScrollTo(menuWidth);
-        }
-    }
-
     public boolean isMenuShowing() {
         int oldScrollX = getScrollX();
         if (oldScrollX == 0) {
@@ -373,7 +346,16 @@ public class ContentView2 extends ViewGroup {
         return false;
     }
 
-    void smoothScrollTo(int dx) {
+    public void toggle() {
+        int oldScrollX = getScrollX();
+        if (oldScrollX == 0) {//菜单关闭，打开菜单
+            smoothScrollTo(-menuWidth);
+        } else if (oldScrollX == -menuWidth) {//菜单打开，关闭菜单
+            smoothScrollTo(menuWidth);
+        }
+    }
+
+    private void smoothScrollTo(int dx) {
         int duration = 500;
         int oldScrollX = getScrollX();
         mScroller.startScroll(oldScrollX, getScrollY(), dx, getScrollY(),
@@ -381,7 +363,26 @@ public class ContentView2 extends ViewGroup {
         invalidate();
     }
 
-    void enableChildrenCache() {
+    @Override
+    public void computeScroll() {
+        if (!mScroller.isFinished()) {
+            //如果条件成立，则滑动没有结束
+            if (mScroller.computeScrollOffset()) {
+                int oldX = getScrollX();
+                int oldY = getScrollY();
+                int x = mScroller.getCurrX();
+                int y = mScroller.getCurrY();
+                if (oldX != x || oldY != y) {
+                    //真正触发滑动的操作
+                    scrollTo(x, y);
+                }
+                // Keep on drawing until the animation has finished.
+                postInvalidate();
+            }
+        }
+    }
+
+    private void enableChildrenCache() {
         final int count = getChildCount();
         for (int i = 0; i < count; i++) {
             final View layout = (View) getChildAt(i);
@@ -389,7 +390,7 @@ public class ContentView2 extends ViewGroup {
         }
     }
 
-    void clearChildrenCache() {
+    private void clearChildrenCache() {
         final int count = getChildCount();
         for (int i = 0; i < count; i++) {
             final View layout = (View) getChildAt(i);
