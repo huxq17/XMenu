@@ -5,15 +5,12 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.Scroller;
-
-import com.andview.example.utils.LogUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,8 +39,8 @@ public class ContentView extends ViewGroup {
     /**
      * 手指点击屏幕的最初位置
      */
-    private float mLastMotionX;
-    private float mLastMotionY;
+    private int mLastMotionX;
+    private int mLastMotionY;
 
     private int mShadowWidth = 15;
     private Drawable mShadowDrawable;
@@ -140,194 +137,122 @@ public class ContentView extends ViewGroup {
 
     private MotionEvent mLastMoveEvent;
     private boolean isCloseMenu = false;
+    private boolean isIntercept = true;
+    private boolean mHasSendCancelEvent = false;
+    private int oldScrollX = 0;
+    /**
+     * 是否应该滑动菜单
+     */
+    private boolean mShouldMove = true;
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         final int action = ev.getAction();
-        final float x = ev.getX();
-        final float y = ev.getY();
+        final int x = (int) ev.getX();
+        final int y = (int) ev.getY();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
+                mHasSendCancelEvent = false;
+                mShouldMove = false;
+                if (mVelocityTracker == null) {
+                    mVelocityTracker = VelocityTracker.obtain();
+                }
+                mVelocityTracker.addMovement(ev);
                 mLastMotionX = x;
                 mLastMotionY = y;
-                int oldScrollX = getScrollX();
                 if (isMenuShowing() && mLastMotionX >= menuWidth) {
                     //当菜单显示并且点击的位置处于contentView上，那么在手指抬起时关闭菜单
                     isCloseMenu = true;
-                    return true;
-                }
-                if (thisTouchAllowed(ev)) {
-
-                    mIntercept = true;
-                    return true;
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
+                mLastMoveEvent = ev;
+                oldScrollX = getScrollX();
+                if (isIntercept && oldScrollX == 0 && !thisTouchAllowed(ev)) {
+                    //当菜单关闭时，不允许打开菜单则返回默认值不拦截
+                    return super.dispatchTouchEvent(ev);
+                } else {
+                    //如果已经达到打开菜单的条件了，则不再进行判断了，直接拦截接着进行菜单滑动的操作
+                    isIntercept = false;
+                }
                 final int xDiff = (int) Math.abs(x - mLastMotionX);
                 final int yDiff = (int) Math.abs(y - mLastMotionY);
-                boolean xMoved = xDiff > yDiff && xDiff > mTouchSlop;
-                if (xMoved) {
-                    final float deltaX = mLastMotionX - x;
+                //避免与竖直方向的滑动产生冲突
+                if (xDiff > yDiff && xDiff > mTouchSlop) {
+                    mShouldMove = true;
+                }
+                //滑动菜单
+                if (mShouldMove) {
+                    sendCancelEvent();
+                    final int deltaX = mLastMotionX - x;
                     mLastMotionX = x;
-                    oldScrollX = getScrollX();
-                    float scrollX = oldScrollX + deltaX;
-                    final float leftBound = 0;
-                    final float rightBound = -menuWidth;
-                    if (scrollX > leftBound) {
+                    int scrollX = oldScrollX + deltaX;
+                    final int leftBound = 0;
+                    final int rightBound = -menuWidth;
+                    //边界控制，防止越界
+                    if (scrollX > leftBound) {//到达左边
                         scrollX = leftBound;
-                    } else if (scrollX < rightBound) {
+                    } else if (scrollX < rightBound) {//到达右边
                         scrollX = rightBound;
                     }
-                    scrollTo((int) scrollX, getScrollY());
+                    scrollTo(scrollX, getScrollY());
+                    return true;
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                if (isCloseMenu) {
+                if (isCloseMenu && isMenuShowing()) {
                     showContent();
-                    isCloseMenu = false;
+                } else {
+                    oldScrollX = getScrollX();
+                    if (oldScrollX < 0 && oldScrollX > -menuWidth) {
+                        int dx = 0;
+                        if (oldScrollX < -menuWidth / 2) {
+                            dx = -menuWidth - oldScrollX;
+                        } else {
+                            dx = -oldScrollX;
+                        }
+                        smoothScrollTo(dx);
+                    }
                 }
-                mIntercept = false;
-                break;
-
-            default:
+                isCloseMenu = false;
+                isIntercept = true;
+                if (mVelocityTracker != null) {
+                    mVelocityTracker.recycle();
+                    mVelocityTracker = null;
+                }
                 break;
         }
         return super.dispatchTouchEvent(ev);
     }
 
-    private boolean mIntercept = false;
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        if (!mIntercept) {
-            return false;
+    private void sendCancelEvent() {
+        if (!mHasSendCancelEvent) {
+            mHasSendCancelEvent = true;
+            MotionEvent last = mLastMoveEvent;
+            MotionEvent e = MotionEvent.obtain(
+                    last.getDownTime(),
+                    last.getEventTime()
+                            + ViewConfiguration.getLongPressTimeout(),
+                    MotionEvent.ACTION_CANCEL, last.getX(), last.getY(),
+                    last.getMetaState());
+            dispatchTouchEventSupper(e);
         }
+    }
 
-        final int action = ev.getAction();
-        if ((action == MotionEvent.ACTION_MOVE)
-                && (mTouchState != TOUCH_STATE_REST)) {
-            Log.e("ad", "return true");
-            return true;
-        }
-
-        final float x = ev.getX();
-        final float y = ev.getY();
-        switch (action) {
-            case MotionEvent.ACTION_DOWN:
-                // Remember location of down touch
-                mLastMotionX = x;
-                mLastMotionY = y;
-                mTouchState = mScroller.isFinished() ? TOUCH_STATE_REST
-                        : TOUCH_STATE_SCROLLING;
-                LogUtils.e("onInterceptTouchEvent  ACTION_DOWN  mTouchState=="
-                        + (mTouchState == TOUCH_STATE_SCROLLING));
-                break;
-            case MotionEvent.ACTION_MOVE:
-                final int xDiff = (int) Math.abs(x - mLastMotionX);
-                final int yDiff = (int) Math.abs(y - mLastMotionY);
-
-                boolean xMoved = xDiff > yDiff && xDiff > mTouchSlop;
-
-                if (xMoved) {
-                    // Scroll if the user moved far enough along the X axis
-                    mTouchState = TOUCH_STATE_SCROLLING;
-                    LogUtils.e(
-                            "onInterceptTouchEvent  ACTION_MOVE  mTouchState=="
-                                    + (mTouchState == TOUCH_STATE_SCROLLING));
-                    enableChildrenCache();
-                }
-                break;
-            case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_UP:
-                // Release the drag
-                clearChildrenCache();
-                mTouchState = TOUCH_STATE_REST;
-                LogUtils.e("onInterceptTouchEvent  ACTION_UP  mTouchState=="
-                        + (mTouchState == TOUCH_STATE_SCROLLING));
-                break;
-        }
-
-     /*
-     * The only time we want to intercept motion events is if we are in the
-     * drag mode.
-     */
-        return mTouchState != TOUCH_STATE_REST;
+    public boolean dispatchTouchEventSupper(MotionEvent e) {
+        return super.dispatchTouchEvent(e);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        if (mVelocityTracker == null) {
-            mVelocityTracker = VelocityTracker.obtain();
-        }
-        mVelocityTracker.addMovement(ev);
-
-        final int action = ev.getAction();
-        final float x = ev.getX();
-        final float y = ev.getY();
-
-        switch (action) {
+        switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                mLastMotionX = x;
-                mLastMotionY = y;
-                int oldScrollX = getScrollX();
-                if (oldScrollX == 0) {
+                if (getScrollX() == 0) {
                     // 当菜单隐藏时，消费此事件解决点击穿透的问题
                     return true;
                 }
-                break;
-            case MotionEvent.ACTION_MOVE:
-                final int xDiff = (int) Math.abs(x - mLastMotionX);
-                final int yDiff = (int) Math.abs(y - mLastMotionY);
-                boolean xMoved = xDiff > mTouchSlop;
-                if (xMoved) {
-                    mTouchState = TOUCH_STATE_SCROLLING;
-                    LogUtils.i("onInterceptTouchEvent ACTION_MOVE  mTouchState=="
-                            + (mTouchState == TOUCH_STATE_SCROLLING));
-                    enableChildrenCache();
-                }
-                if (mTouchState == TOUCH_STATE_SCROLLING) {
-                    final float deltaX = mLastMotionX - x;
-                    mLastMotionX = x;
-                    oldScrollX = getScrollX();
-                    float scrollX = oldScrollX + deltaX;
-                    final float leftBound = 0;
-                    final float rightBound = -menuWidth;
-                    if (scrollX > leftBound) {
-                        scrollX = leftBound;
-                    } else if (scrollX < rightBound) {
-                        scrollX = rightBound;
-                    }
-                    scrollTo((int) scrollX, getScrollY());
-
-                }
-                break;
-            case MotionEvent.ACTION_UP:
-                if (mTouchState == TOUCH_STATE_SCROLLING) {
-                    final VelocityTracker velocityTracker = mVelocityTracker;
-                    velocityTracker.computeCurrentVelocity(SNAP_VELOCITY);
-                    int velocityX = (int) velocityTracker.getXVelocity();
-                    oldScrollX = getScrollX();
-                    LogUtils.i("oldScrollX == " + oldScrollX + ";menuWidth=" + menuWidth);
-                    int dx = 0;
-                    if (oldScrollX < -menuWidth / 2) {
-                        dx = -menuWidth - oldScrollX;
-                    } else {
-                        dx = -oldScrollX;
-                    }
-                    smoothScrollTo(dx);
-                    if (mVelocityTracker != null) {
-                        mVelocityTracker.recycle();
-                        mVelocityTracker = null;
-                    }
-                } else {
-                    showContent();
-                }
-            case MotionEvent.ACTION_CANCEL:
-                mTouchState = TOUCH_STATE_REST;
-                return true;
         }
-
         return false;
     }
 
@@ -432,9 +357,14 @@ public class ContentView extends ViewGroup {
         return mTouchMode;
     }
 
+    /**
+     * 是否允许滑动菜单，可通过设置TouchMode来避免与viewpager的冲突
+     *
+     * @param ev
+     * @return
+     */
     private boolean thisTouchAllowed(MotionEvent ev) {
         int x = (int) (ev.getX());
-        LogUtils.i("thisTouchAllowed x=" + x);
         if (isMenuShowing()) {
             return true;
         }
@@ -449,6 +379,9 @@ public class ContentView extends ViewGroup {
         return false;
     }
 
+    /**
+     * 当TouchMode为TOUCHMODE_MARGIN时，设定屏幕左边缘可滑动菜单的距离
+     */
     private int mEdgeWith;
 
     public void setEdgeWith(int width) {

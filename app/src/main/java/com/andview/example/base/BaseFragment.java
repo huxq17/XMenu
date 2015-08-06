@@ -10,7 +10,7 @@ public class BaseFragment extends Fragment {
     private Toast toast;
 
     /**
-     * ¸ñÊ½»¯×Ö·û´®
+     * æ ¼å¼åŒ–å­—ç¬¦ä¸²
      *
      * @param format
      * @param args
