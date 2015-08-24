@@ -11,7 +11,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RelativeLayout;
 
-import com.andview.example.utils.DisplayUtil;
 import com.andview.xmenu.R;
 
 public class XMenu extends RelativeLayout {
@@ -74,8 +73,8 @@ public class XMenu extends RelativeLayout {
             mContentView.setLeftShadowDrawable(leftShadowDrawable);
             int touchModeAbove = a.getInt(R.styleable.XMenu_touchModeAbove, TOUCHMODE_MARGIN);
             setTouchModeAbove(touchModeAbove);
-            int edgeWidth = a.getInt(R.styleable.XMenu_edgeWidth, DisplayUtil.dip2px(getContext(),10));
-            mContentView.setEdgeWith(edgeWidth);
+//            int edgeWidth = a.getInt(R.styleable.XMenu_edgeWidth, DisplayUtil.dip2px(getContext(), 10));
+//            setEdgeWidth(edgeWidth);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -136,5 +135,13 @@ public class XMenu extends RelativeLayout {
                     "TOUCHMODE_FULLSCREEN or TOUCHMODE_MARGIN or TOUCHMODE_NONE.");
         }
         mContentView.setTouchMode(i);
+    }
+
+    /**
+     * 当touchModeAbove为TOUCHMODE_MARGIN时,设置屏幕边缘的宽度，建议使用系统的配置
+     */
+    @Deprecated
+    public void setEdgeWidth(int edgeWidth) {
+        mContentView.setEdgeWidth(edgeWidth);
     }
 }

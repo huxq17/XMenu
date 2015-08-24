@@ -48,6 +48,10 @@ public class ContentView extends ViewGroup {
     private int mTouchMode = XMenu.TOUCHMODE_MARGIN;
     private List<View> mIgnoredViews = new ArrayList<View>();
     private View mContentView;
+    /**
+     * 当TouchMode为TOUCHMODE_MARGIN时，设定屏幕左边缘可滑动菜单的距离
+     */
+    private int mEdgeWidth;
 
     public ContentView(Context context) {
         super(context);
@@ -88,7 +92,9 @@ public class ContentView extends ViewGroup {
         //通过设置setWillNotDraw来让viewgroup回调onDraw
         setWillNotDraw(false);
         mScroller = new Scroller(getContext());
-        mTouchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
+        final ViewConfiguration vf = ViewConfiguration.get(getContext());
+        mTouchSlop = vf.getScaledTouchSlop();
+        mEdgeWidth = vf.getScaledFadingEdgeLength();
     }
 
     public void setView(View v) {
@@ -374,17 +380,16 @@ public class ContentView extends ViewGroup {
             case XMenu.TOUCHMODE_NONE:
                 return false;
             case XMenu.TOUCHMODE_MARGIN:
-                return x <= mEdgeWith;
+                return x <= mEdgeWidth;
         }
         return false;
     }
 
     /**
-     * 当TouchMode为TOUCHMODE_MARGIN时，设定屏幕左边缘可滑动菜单的距离
+     * 设置屏幕边缘的宽度，建议使用系统的配置
      */
-    private int mEdgeWith;
-
-    public void setEdgeWith(int width) {
-        mEdgeWith = width;
+    @Deprecated
+    public void setEdgeWidth(int width) {
+        mEdgeWidth = width;
     }
 }
