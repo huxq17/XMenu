@@ -42,6 +42,7 @@ public class ContentView extends ViewGroup {
     /**
      * 手指点击屏幕的最初位置
      */
+    private int mInitialMotionX;
     private int mLastMotionX;
     private int mLastMotionY;
 
@@ -167,17 +168,19 @@ public class ContentView extends ViewGroup {
                     mVelocityTracker = VelocityTracker.obtain();
                 }
                 mVelocityTracker.addMovement(ev);
-                mLastMotionX = x;
+                mLastMotionX = mInitialMotionX = x;
                 mLastMotionY = y;
                 if (isMenuShowing() && mLastMotionX >= menuWidth) {
                     //当菜单显示并且点击的位置处于contentView上，那么在手指抬起时关闭菜单
                     isCloseMenu = true;
                 }
+                if(!mScroller.isFinished()){
+                    mScroller.abortAnimation();
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 mLastMoveEvent = ev;
                 oldScrollX = getScrollX();
-                LogUtils.d("mScroller.isFinished()="+mScroller.isFinished()+";oldScrollX == 0 is "+(oldScrollX == 0));
                 if (isIntercept && oldScrollX == 0 && !thisTouchAllowed(ev)) {
                     //当菜单关闭时，不允许打开菜单则返回默认值不拦截
                     return super.dispatchTouchEvent(ev);
@@ -223,7 +226,7 @@ public class ContentView extends ViewGroup {
                         } else {
                             dx = -oldScrollX;
                         }
-                        smoothScrollTo(dx);
+                        smoothScrollTo(dx, 500);
                     }
                 }
                 isCloseMenu = false;
@@ -270,9 +273,9 @@ public class ContentView extends ViewGroup {
     public void toggle() {
         int oldScrollX = getScrollX();
         if (oldScrollX == 0) {
-            smoothScrollTo(-menuWidth);
+            smoothScrollTo(-menuWidth, duration);
         } else if (oldScrollX == -menuWidth) {
-            smoothScrollTo(menuWidth);
+            smoothScrollTo(menuWidth, duration);
         }
     }
 
@@ -288,7 +291,7 @@ public class ContentView extends ViewGroup {
 
     public void showContent() {
         if (isMenuShowing()) {
-            smoothScrollTo(menuWidth);
+            smoothScrollTo(menuWidth, duration);
         }
     }
 
@@ -319,7 +322,7 @@ public class ContentView extends ViewGroup {
         return false;
     }
 
-    private void smoothScrollTo(int dx) {
+    private void smoothScrollTo(int dx, int duration) {
         int oldScrollX = getScrollX();
         mScroller.startScroll(oldScrollX, getScrollY(), dx, getScrollY(),
                 duration);
