@@ -12,11 +12,14 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.Scroller;
 
+import com.andview.example.utils.LogUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ContentView extends ViewGroup {
 
+    private int duration = 500;
     /**
      * 菜单宽度
      */
@@ -94,7 +97,7 @@ public class ContentView extends ViewGroup {
         mScroller = new Scroller(getContext());
         final ViewConfiguration vf = ViewConfiguration.get(getContext());
         mTouchSlop = vf.getScaledTouchSlop();
-        mEdgeWidth = vf.getScaledFadingEdgeLength();
+        mEdgeWidth = vf.getScaledEdgeSlop() * 2;
     }
 
     public void setView(View v) {
@@ -174,6 +177,7 @@ public class ContentView extends ViewGroup {
             case MotionEvent.ACTION_MOVE:
                 mLastMoveEvent = ev;
                 oldScrollX = getScrollX();
+                LogUtils.d("mScroller.isFinished()="+mScroller.isFinished()+";oldScrollX == 0 is "+(oldScrollX == 0));
                 if (isIntercept && oldScrollX == 0 && !thisTouchAllowed(ev)) {
                     //当菜单关闭时，不允许打开菜单则返回默认值不拦截
                     return super.dispatchTouchEvent(ev);
@@ -207,6 +211,7 @@ public class ContentView extends ViewGroup {
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
+                LogUtils.i("ACTION_UP");
                 if (isCloseMenu && isMenuShowing()) {
                     showContent();
                 } else {
@@ -315,7 +320,6 @@ public class ContentView extends ViewGroup {
     }
 
     private void smoothScrollTo(int dx) {
-        int duration = 500;
         int oldScrollX = getScrollX();
         mScroller.startScroll(oldScrollX, getScrollY(), dx, getScrollY(),
                 duration);
