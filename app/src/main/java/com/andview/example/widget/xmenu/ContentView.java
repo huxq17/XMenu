@@ -174,7 +174,7 @@ public class ContentView extends ViewGroup {
                     //当菜单显示并且点击的位置处于contentView上，那么在手指抬起时关闭菜单
                     isCloseMenu = true;
                 }
-                if(!mScroller.isFinished()){
+                if (!mScroller.isFinished()) {
                     mScroller.abortAnimation();
                 }
                 break;
@@ -262,10 +262,8 @@ public class ContentView extends ViewGroup {
     public boolean onTouchEvent(MotionEvent ev) {
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if (getScrollX() == 0) {
-                    // 当菜单隐藏时，消费此事件解决点击穿透的问题
-                    return true;
-                }
+                // 当菜单隐藏时，消费此事件解决点击穿透的问题
+                return true;
         }
         return false;
     }
